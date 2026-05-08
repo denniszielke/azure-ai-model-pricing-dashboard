@@ -221,7 +221,7 @@ def export_html(
             title=title,
         )
     except ValueError as exc:
-        console.print(f"[yellow]{exc}[/yellow]")
+        console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from exc
     except Exception as exc:
         console.print(f"[red]Failed to generate HTML report:[/red] {exc}")

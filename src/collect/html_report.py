@@ -4,6 +4,7 @@ html_report.py - Generate a self-contained HTML report from normalized parquet d
 
 from __future__ import annotations
 
+import base64
 import html
 import json
 from pathlib import Path
@@ -124,7 +125,9 @@ def generate_html_report(
         f'<option value="{html.escape(r, quote=True)}">{html.escape(r, quote=True)}</option>'
         for r in resource_types
     )
-    data_json = json.dumps(records, ensure_ascii=True).replace("</", "<\\/")
+    data_json_b64 = base64.b64encode(
+        json.dumps(records, ensure_ascii=True).encode("utf-8")
+    ).decode("ascii")
     currency_json = json.dumps(currency, ensure_ascii=True).replace("</", "<\\/")
 
     html_content = f"""<!doctype html>
@@ -132,6 +135,7 @@ def generate_html_report(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>{title_html}</title>
   <style>
     body {{
@@ -233,7 +237,7 @@ def generate_html_report(
 
   <script>{get_plotlyjs()}</script>
   <script>
-    const DATA = {data_json};
+    const DATA = JSON.parse(atob("{data_json_b64}"));
     const CURRENCY = {currency_json};
     const subFilter = document.getElementById("subscription-filter");
     const resourceFilter = document.getElementById("resource-filter");
@@ -280,7 +284,11 @@ def generate_html_report(
       const filtered = applyFilters(DATA);
       const tokens = filtered.reduce((a, b) => a + (Number(b.total_quantity) || 0), 0);
       const cost = filtered.reduce((a, b) => a + (Number(b.total_cost) || 0), 0);
-      const avgEff = filtered.length ? filtered.reduce((a, b) => a + (Number(b.effective_price_per_1m) || 0), 0) / filtered.length : 0;
+      const weightedEff = filtered.reduce(
+        (a, b) => a + ((Number(b.effective_price_per_1m) || 0) * (Number(b.total_quantity) || 0)),
+        0
+      );
+      const avgEff = tokens > 0 ? weightedEff / tokens : 0;
       const avgDisc = filtered.length ? filtered.reduce((a, b) => a + (Number(b.discount_pct) || 0), 0) / filtered.length : 0;
 
       document.getElementById("kpi-tokens").textContent = fmtInt(tokens);
