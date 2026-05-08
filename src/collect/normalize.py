@@ -102,16 +102,21 @@ COLUMN_ALIASES: dict[str, str] = {
     "additional information": "additional_info",
 }
 
-# Service name / tier patterns that indicate Azure OpenAI usage
+# Service name / tier patterns that indicate Azure OpenAI or Foundry model usage
 OPENAI_SERVICE_PATTERNS = [
     "azure openai",
     "openai",
-    "cognitive services",  # OpenAI is under Cognitive Services umbrella
+    "cognitive services",   # OpenAI is under Cognitive Services umbrella
+    "cognitiveservices",    # ConsumedService value: "Microsoft.CognitiveServices"
+    "foundry models",       # MeterCategory for Azure AI Foundry model deployments
+    "azure ai",             # Azure AI Foundry and related Azure AI services
 ]
 
 OPENAI_TIER_PATTERNS = [
     "azure openai",
     "openai",
+    "foundry models",
+    "azure ai",
 ]
 
 OPENAI_PRODUCT_PATTERNS = [
@@ -210,9 +215,12 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def filter_openai_rows(df: pd.DataFrame) -> pd.DataFrame:
-    """Keep only rows that relate to Azure OpenAI usage.
+    """Keep only rows that relate to Azure OpenAI or Azure AI Foundry model usage.
 
-    Matches on ``service_tier``, ``service_name``, or ``product_name``.
+    Matches on ``service_tier``, ``service_name``, ``product_name``, or
+    ``meter_name``.  Foundry-based model deployments are identified by
+    ``service_tier`` = "Foundry Models" and ``service_name`` =
+    "Microsoft.CognitiveServices".
     """
     if df.empty:
         return df
@@ -232,7 +240,7 @@ def filter_openai_rows(df: pd.DataFrame) -> pd.DataFrame:
 
     filtered = df[mask].copy()
     logger.debug(
-        "OpenAI filter: %d/%d rows retained", len(filtered), len(df)
+        "AI (OpenAI/Foundry) filter: %d/%d rows retained", len(filtered), len(df)
     )
     return filtered
 
@@ -413,7 +421,7 @@ def normalize_dataframe(
     df = filter_openai_rows(df)
 
     if df.empty:
-        logger.info("No Azure OpenAI rows found in this dataset")
+        logger.info("No Azure OpenAI / Foundry model rows found in this dataset")
         return df
 
     df = coerce_numeric(df)

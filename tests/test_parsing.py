@@ -124,6 +124,52 @@ class TestFilterOpenAIRows:
         result = filter_openai_rows(df)
         assert len(result) == 3
 
+    def test_foundry_models_service_tier_included(self) -> None:
+        """Rows with service_tier='Foundry Models' (Azure AI Foundry) must be kept."""
+        df = make_df(
+            service_tier=["Foundry Models", "Storage"],
+            service_name=["Microsoft.CognitiveServices", "Microsoft.Storage"],
+            product_name=["Azure OpenAI GPT5", "Blob Storage"],
+            quantity=["100", "200"],
+        )
+        result = filter_openai_rows(df)
+        assert len(result) == 1
+        assert result["service_tier"].iloc[0] == "Foundry Models"
+
+    def test_cognitiveservices_no_space_included(self) -> None:
+        """'Microsoft.CognitiveServices' (no space) in service_name must be kept."""
+        df = make_df(
+            service_name=["Microsoft.CognitiveServices", "Microsoft.Storage"],
+            service_tier=["Foundry Models", "Storage"],
+            quantity=["50", "100"],
+        )
+        result = filter_openai_rows(df)
+        assert len(result) == 1
+        assert result["service_name"].iloc[0] == "Microsoft.CognitiveServices"
+
+    def test_foundry_row_from_csv_example(self) -> None:
+        """End-to-end check using field values from the problem-statement CSV example."""
+        df = make_df(
+            service_tier=["Foundry Models"],
+            service_name=["Microsoft.CognitiveServices"],
+            product_name=["Azure OpenAI GPT5 - 5.4 nano Opt Gl - SE Central"],
+            meter_name=["5.4 nano Opt Gl 1M Tokens"],
+            quantity=["1.25"],
+        )
+        result = filter_openai_rows(df)
+        assert len(result) == 1
+
+    def test_non_ai_rows_excluded(self) -> None:
+        """Rows with no AI-related identifiers must remain excluded."""
+        df = make_df(
+            service_tier=["Storage", "Compute", "Network"],
+            service_name=["Microsoft.Storage", "Microsoft.Compute", "Microsoft.Network"],
+            product_name=["Blob Storage", "Virtual Machine", "VPN Gateway"],
+            quantity=["10", "20", "30"],
+        )
+        result = filter_openai_rows(df)
+        assert result.empty
+
 
 # ---------------------------------------------------------------------------
 # coerce_numeric
