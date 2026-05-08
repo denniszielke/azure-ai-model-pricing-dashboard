@@ -247,6 +247,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-else:
-    # When run via `streamlit run`, Streamlit imports the module, so call main()
-    main()

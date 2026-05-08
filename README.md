@@ -200,5 +200,4 @@ Opens at [http://localhost:8501](http://localhost:8501) by default.
 | `AZURE_TENANT_ID` | SP auth only | Azure AD tenant ID |
 | `AZURE_CLIENT_ID` | SP auth only | Service principal app ID |
 | `AZURE_CLIENT_SECRET` | SP auth only | Service principal secret |
-| `AZURE_SUBSCRIPTION_ID` | Optional | Override default subscription |
 | `COST_DASHBOARD_DATA_DIR` | Optional | Override data directory (default: `./data`) |

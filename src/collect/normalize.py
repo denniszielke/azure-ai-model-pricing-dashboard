@@ -353,10 +353,10 @@ def aggregate_by_subscription_meter(df: pd.DataFrame) -> pd.DataFrame:
         avg_eff = weighted_avg(grp[eff_col].fillna(0.0), qty) if eff_col else float("nan")
         avg_payg = weighted_avg(grp[payg_col].fillna(0.0), qty) if payg_col else float("nan")
 
-        discount_abs = max(avg_payg - avg_eff, 0.0) if (avg_payg and avg_eff) else 0.0
+        discount_abs = max(avg_payg - avg_eff, 0.0) if (not pd.isna(avg_payg) and not pd.isna(avg_eff)) else 0.0
         discount_pct = (
             (discount_abs / avg_payg) * 100.0
-            if avg_payg and avg_payg > 0
+            if (not pd.isna(avg_payg) and avg_payg > 0)
             else 0.0
         )
 
