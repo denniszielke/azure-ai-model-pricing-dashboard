@@ -4,6 +4,7 @@ html_report.py - Generate a self-contained HTML report from normalized parquet d
 
 from __future__ import annotations
 
+import html
 import json
 from pathlib import Path
 
@@ -114,13 +115,22 @@ def generate_html_report(
     subs = sorted({r["subscription_id"] for r in records if r["subscription_id"]})
     resource_types = sorted({r["ai_resource_type"] for r in records if r["ai_resource_type"]})
     currency = next((r["currency"] for r in records if r["currency"]), "")
+    title_html = html.escape(title, quote=True)
+    sub_options = "".join(
+        f'<option value="{html.escape(s, quote=True)}">{html.escape(s, quote=True)}</option>'
+        for s in subs
+    )
+    resource_options = "".join(
+        f'<option value="{html.escape(r, quote=True)}">{html.escape(r, quote=True)}</option>'
+        for r in resource_types
+    )
 
-    html = f"""<!doctype html>
+    html_content = f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{title}</title>
+  <title>{title_html}</title>
   <style>
     body {{
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -173,7 +183,7 @@ def generate_html_report(
   </style>
 </head>
 <body>
-  <h1 class="title">💰 {title}</h1>
+  <h1 class="title">💰 {title_html}</h1>
   <p class="subtitle">Token usage, effective prices, discounts, and model usage breakdown</p>
 
   <div class="filters">
@@ -181,14 +191,14 @@ def generate_html_report(
       Subscription
       <select id="subscription-filter">
         <option value="__all__">All subscriptions</option>
-        {"".join(f'<option value="{s}">{s}</option>' for s in subs)}
+        {sub_options}
       </select>
     </label>
     <label>
       AI resource type
       <select id="resource-filter">
         <option value="__all__">All resource types</option>
-        {"".join(f'<option value="{r}">{r}</option>' for r in resource_types)}
+        {resource_options}
       </select>
     </label>
   </div>
@@ -362,5 +372,5 @@ def generate_html_report(
 """
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    output_file.write_text(html, encoding="utf-8")
+    output_file.write_text(html_content, encoding="utf-8")
     return input_count, len(df)
