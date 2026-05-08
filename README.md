@@ -33,10 +33,13 @@ Your identity (user or service principal) needs the following roles:
 Grant via Azure Portal → Subscriptions → Access control (IAM) → Add role assignment, or via CLI:
 
 ```bash
+# Set your subscription ID first
+export SUBSCRIPTION_ID="<your-subscription-id>"
+
 az role assignment create \
   --role "Cost Management Reader" \
   --assignee <your-user-or-sp-object-id> \
-  --scope /subscriptions/<SUBSCRIPTION_ID>
+  --scope /subscriptions/$SUBSCRIPTION_ID
 ```
 
 ---
@@ -76,12 +79,55 @@ The collector will automatically enumerate all subscriptions accessible by the l
 
 #### Automation / CI (Service Principal)
 
-Set the following environment variables before running:
+First, create a service principal with the required roles:
 
 ```bash
-export AZURE_TENANT_ID="<your-tenant-id>"
-export AZURE_CLIENT_ID="<your-client-id>"
-export AZURE_CLIENT_SECRET="<your-client-secret>"
+# Set your subscription ID
+export SUBSCRIPTION_ID="<your-subscription-id>"
+
+# Create a service principal and assign Cost Management Reader role
+az ad sp create-for-rbac \
+  --name "azure-ai-pricing-dashboard-sp" \
+  --role "Cost Management Reader" \
+  --scopes /subscriptions/$SUBSCRIPTION_ID
+
+# The command outputs:
+# {
+#   "appId": "<client-id>",
+#   "displayName": "azure-ai-pricing-dashboard-sp",
+#   "password": "<client-secret>",
+#   "tenant": "<tenant-id>"
+# }
+
+
+Then set the following environment variables before running:
+
+```bash
+export AZURE_TENANT_ID="<tenant-from-output>"
+export AZURE_CLIENT_ID="<client-id>"
+export AZURE_CLIENT_SECRET="<client-secret>"
+```
+
+
+# Also grant Reader role for listing resources/meters
+az role assignment create \
+  --assignee $AZURE_CLIENT_ID \
+  --role "Reader" \
+  --scope /subscriptions/$SUBSCRIPTION_ID
+```
+
+For multiple subscriptions, repeat the role assignments for each:
+
+```bash
+az role assignment create \
+  --assignee $AZURE_CLIENT_ID \
+  --role "Cost Management Reader" \
+  --scope /subscriptions/<ANOTHER_SUBSCRIPTION_ID>
+
+az role assignment create \
+  --assignee $AZURE_CLIENT_ID \
+  --role "Reader" \
+  --scope /subscriptions/<ANOTHER_SUBSCRIPTION_ID>
 ```
 
 `DefaultAzureCredential` picks these up automatically.

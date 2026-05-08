@@ -194,14 +194,19 @@ def parse_month_arg(month_arg: str) -> tuple[date, date]:
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Rename raw Cost Details columns to canonical names.
 
-    Unknown columns are kept as-is.
+    Unknown columns are kept as-is.  When multiple raw columns map to the
+    same canonical name, only the first occurrence is kept.
     """
     rename_map: dict[str, str] = {}
     for col in df.columns:
         key = col.lower().strip()
         if key in COLUMN_ALIASES:
             rename_map[col] = COLUMN_ALIASES[key]
-    return df.rename(columns=rename_map)
+    df = df.rename(columns=rename_map)
+
+    # Drop duplicate canonical columns (keep first occurrence)
+    df = df.loc[:, ~df.columns.duplicated()]
+    return df
 
 
 def filter_openai_rows(df: pd.DataFrame) -> pd.DataFrame:
