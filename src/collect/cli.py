@@ -223,6 +223,12 @@ def export_html(
     except ValueError as exc:
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from exc
+    except PermissionError as exc:
+        console.print(f"[red]Permission denied while writing report:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except OSError as exc:
+        console.print(f"[red]File system error while generating report:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
     except Exception as exc:
         logger.exception("Failed to generate HTML report")
         console.print("[red]Failed to generate HTML report. Check logs for details.[/red]")

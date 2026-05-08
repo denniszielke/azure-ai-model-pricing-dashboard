@@ -263,7 +263,7 @@ def generate_html_report(
     function groupSum(rows, keys, valueKey) {{
       const m = new Map();
       for (const row of rows) {{
-        const k = keys.map(c => row[c] || "").join("||");
+        const k = JSON.stringify(keys.map(c => row[c] || ""));
         m.set(k, (m.get(k) || 0) + (Number(row[valueKey]) || 0));
       }}
       return m;
@@ -310,7 +310,7 @@ def generate_html_report(
       const subscriptions = [...new Set(filtered.map(x => x.subscription_id || "unknown"))];
       const meters = [...new Set(filtered.map(x => x.meter_name || "unknown"))];
       const traces = meters.map(meter => {{
-        const y = subscriptions.map(sub => meterKeys.get(`${{sub}}||${{meter}}`) || 0);
+        const y = subscriptions.map(sub => meterKeys.get(JSON.stringify([sub, meter])) || 0);
         return {{
           type: "bar",
           name: meter,
