@@ -124,6 +124,8 @@ def generate_html_report(
         f'<option value="{html.escape(r, quote=True)}">{html.escape(r, quote=True)}</option>'
         for r in resource_types
     )
+    data_json = json.dumps(records, ensure_ascii=True).replace("</", "<\\/")
+    currency_json = json.dumps(currency, ensure_ascii=True).replace("</", "<\\/")
 
     html_content = f"""<!doctype html>
 <html lang="en">
@@ -231,8 +233,8 @@ def generate_html_report(
 
   <script>{get_plotlyjs()}</script>
   <script>
-    const DATA = {json.dumps(records)};
-    const CURRENCY = {json.dumps(currency)};
+    const DATA = {data_json};
+    const CURRENCY = {currency_json};
     const subFilter = document.getElementById("subscription-filter");
     const resourceFilter = document.getElementById("resource-filter");
 
@@ -328,7 +330,7 @@ def generate_html_report(
           r.meter_name || "",
           r.subscription_id || "",
           r.product_name || "",
-          fmt2(r.total_quantity),
+          fmtInt(r.total_quantity),
           fmt2(r.total_cost),
           fmt6(r.avg_effective_price),
           fmt6(r.avg_payg_price),
@@ -353,7 +355,7 @@ def generate_html_report(
       const modelRows = [...modelMap.entries()]
         .map(([k, v]) => {{
           const [sub, rt, model] = k.split("||");
-          return [sub, rt, model, fmt2(v.tokens), fmt2(v.cost), CURRENCY];
+          return [sub, rt, model, fmtInt(v.tokens), fmt2(v.cost), CURRENCY];
         }})
         .sort((a, b) => Number((b[4] || "0").replace(/,/g, "")) - Number((a[4] || "0").replace(/,/g, "")));
       renderTable(
