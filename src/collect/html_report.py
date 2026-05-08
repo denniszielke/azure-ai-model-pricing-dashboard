@@ -355,9 +355,13 @@ def generate_html_report(
       const modelRows = [...modelMap.entries()]
         .map(([k, v]) => {{
           const [sub, rt, model] = k.split("||");
-          return [sub, rt, model, fmtInt(v.tokens), fmt2(v.cost), CURRENCY];
+          return {{
+            cost: Number(v.cost) || 0,
+            cells: [sub, rt, model, fmtInt(v.tokens), fmt2(v.cost), CURRENCY]
+          }};
         }})
-        .sort((a, b) => Number((b[4] || "0").replace(/,/g, "")) - Number((a[4] || "0").replace(/,/g, "")));
+        .sort((a, b) => b.cost - a.cost)
+        .map(x => x.cells);
       renderTable(
         "table-models",
         ["Subscription", "AI Resource Type", "Model", "Total Tokens", "Total Cost", "Currency"],
