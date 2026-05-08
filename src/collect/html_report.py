@@ -269,14 +269,23 @@ def generate_html_report(
       return m;
     }}
 
+    function escapeHtml(value) {{
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }}
+
     function renderTable(containerId, headers, rows) {{
       const container = document.getElementById(containerId);
       if (!rows.length) {{
         container.innerHTML = "<p class='muted'>No data for current filters.</p>";
         return;
       }}
-      const thead = "<thead><tr>" + headers.map(h => `<th>${{h}}</th>`).join("") + "</tr></thead>";
-      const tbody = "<tbody>" + rows.map(r => "<tr>" + r.map(c => `<td>${{c}}</td>`).join("") + "</tr>").join("") + "</tbody>";
+      const thead = "<thead><tr>" + headers.map(h => `<th>${{escapeHtml(h)}}</th>`).join("") + "</tr></thead>";
+      const tbody = "<tbody>" + rows.map(r => "<tr>" + r.map(c => `<td>${{escapeHtml(c)}}</td>`).join("") + "</tr>").join("") + "</tbody>";
       container.innerHTML = `<table>${{thead}}${{tbody}}</table>`;
     }}
 

@@ -224,7 +224,8 @@ def export_html(
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from exc
     except Exception as exc:
-        console.print(f"[red]Failed to generate HTML report:[/red] {exc}")
+        logger.exception("Failed to generate HTML report")
+        console.print("[red]Failed to generate HTML report. Check logs for details.[/red]")
         raise typer.Exit(code=1) from exc
 
     console.print(
