@@ -1,6 +1,6 @@
 # Azure AI Model Pricing Dashboard
 
-A production-ready Python 3.11 project that builds an **Azure OpenAI cost dashboard** showing last month's usage, effective prices, and discounts across ALL subscriptions you can access.
+A production-ready Python 3.11 project that builds an **Azure OpenAI cost report** showing last month's usage, effective prices, and discounts across ALL subscriptions you can access.
 
 ---
 
@@ -9,7 +9,7 @@ A production-ready Python 3.11 project that builds an **Azure OpenAI cost dashbo
 - Retrieves Azure OpenAI / Foundry token usage via the **Cost Management Generate Cost Details Report** async API (`2024-08-01`)
 - Shows effective (discounted) unit prices, discount vs. PAYG list price, and PTU/token breakdown
 - Aggregates data across all accessible Azure subscriptions automatically
-- Streamlit dashboard with filters, KPIs, and interactive charts
+- Self-contained HTML report with filters, KPIs, and interactive charts
 - Structured logging and local parquet/CSV caching under `data/`
 
 ---
@@ -161,13 +161,20 @@ python -m src.collect.cli validate \
   --file data/normalized/openai_cost_last_month.parquet
 ```
 
-### Run the dashboard
+### Generate a self-contained HTML report
 
 ```bash
-streamlit run src/dashboard/app.py
+python -m src.collect.cli export-html \
+  --file data/normalized/openai_cost_last_month.parquet \
+  --out data/reports/openai_cost_report.html
 ```
 
-Opens at [http://localhost:8501](http://localhost:8501) by default.
+Open `data/reports/openai_cost_report.html` in any browser and share it as a single file.
+The report includes filters for:
+- Subscription
+- AI resource type
+
+It also aggregates model usage across the selected filters.
 
 ---
 
@@ -188,12 +195,12 @@ Opens at [http://localhost:8501](http://localhost:8501) by default.
 │   │   ├── pricesheet.py    # Negotiated price sheet enricher (optional)
 │   │   ├── retail_prices.py # Public retail price enricher (optional)
 │   │   ├── normalize.py     # Field mapping, month range, join enrichers
-│   │   └── cli.py           # Typer CLI: collect + validate commands
-│   └── dashboard/
-│       └── app.py           # Streamlit dashboard
+│   │   ├── html_report.py   # Self-contained HTML report generator
+│   │   └── cli.py           # Typer CLI: collect + validate + export-html
 ├── data/                    # Gitignored: raw CSVs + normalized parquet
 │   ├── raw/
-│   └── normalized/
+│   ├── normalized/
+│   └── reports/
 └── tests/
     ├── test_date_range.py
     └── test_parsing.py
