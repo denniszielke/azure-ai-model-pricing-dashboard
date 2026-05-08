@@ -226,9 +226,14 @@ def generate_html_report(
     const subFilter = document.getElementById("subscription-filter");
     const resourceFilter = document.getElementById("resource-filter");
 
-    const fmtInt = (v) => new Intl.NumberFormat().format(Math.round(v || 0));
-    const fmt2 = (v) => new Intl.NumberFormat(undefined, {{minimumFractionDigits: 2, maximumFractionDigits: 2}}).format(v || 0);
-    const fmt4 = (v) => new Intl.NumberFormat(undefined, {{minimumFractionDigits: 4, maximumFractionDigits: 4}}).format(v || 0);
+    const INT_FMT = new Intl.NumberFormat();
+    const FMT_2 = new Intl.NumberFormat(undefined, {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+    const FMT_4 = new Intl.NumberFormat(undefined, {{minimumFractionDigits: 4, maximumFractionDigits: 4}});
+    const FMT_6 = new Intl.NumberFormat(undefined, {{minimumFractionDigits: 6, maximumFractionDigits: 6}});
+    const fmtInt = (v) => INT_FMT.format(Math.round(v || 0));
+    const fmt2 = (v) => FMT_2.format(v || 0);
+    const fmt4 = (v) => FMT_4.format(v || 0);
+    const fmt6 = (v) => FMT_6.format(v || 0);
 
     function applyFilters(rows) {{
       const s = subFilter.value;
@@ -348,7 +353,6 @@ def generate_html_report(
       );
     }}
 
-    const fmt6 = (v) => new Intl.NumberFormat(undefined, {{minimumFractionDigits: 6, maximumFractionDigits: 6}}).format(v || 0);
     subFilter.addEventListener("change", rerender);
     resourceFilter.addEventListener("change", rerender);
     rerender();
