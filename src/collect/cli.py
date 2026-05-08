@@ -20,6 +20,7 @@ from rich.table import Table
 
 from src.common.logging import configure_logging
 from src.collect.cost_details import download_and_parse, generate_cost_details_report
+from src.collect.html_report import generate_html_report
 from src.collect.normalize import normalize_dataframe, parse_month_arg
 from src.collect.retail_prices import fetch_retail_prices
 from src.collect.subscriptions import list_subscriptions
@@ -189,6 +190,54 @@ def validate(
     console.print("\n[bold]Columns:[/bold]")
     for col in df.columns:
         console.print(f"  • {col}")
+
+
+@app.command("export-html")
+def export_html(
+    file: Path = typer.Option(
+        Path("data/normalized/openai_cost_last_month.parquet"),
+        help="Parquet file to read.",
+    ),
+    out: Path = typer.Option(
+        Path("data/reports/openai_cost_report.html"),
+        help="Output self-contained HTML file path.",
+    ),
+    title: str = typer.Option(
+        "Azure OpenAI Cost Report",
+        help="HTML document title.",
+    ),
+) -> None:
+    """Export a self-contained HTML report with dashboard metrics and filters."""
+    configure_logging("INFO")
+
+    if not file.exists():
+        console.print(f"[red]File not found:[/red] {file}")
+        raise typer.Exit(code=1)
+
+    try:
+        input_rows, output_rows = generate_html_report(
+            input_file=file,
+            output_file=out,
+            title=title,
+        )
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1) from exc
+    except PermissionError as exc:
+        console.print(f"[red]Permission denied while writing report:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except OSError as exc:
+        console.print(f"[red]File system error while generating report:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:
+        logger.exception("Failed to generate HTML report")
+        console.print("[red]Failed to generate HTML report. Check logs for details.[/red]")
+        raise typer.Exit(code=1) from exc
+
+    console.print(
+        f"[green]✓ Wrote HTML report:[/green] [bold]{out}[/bold]\n"
+        f"Rows processed: [bold]{output_rows:,}[/bold] (input: {input_rows:,})"
+    )
 
 
 def _print_summary(df: pd.DataFrame) -> None:
