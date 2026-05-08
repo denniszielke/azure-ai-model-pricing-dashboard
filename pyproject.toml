@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "azure-ai-model-pricing-dashboard"
+version = "0.1.0"
+description = "Azure OpenAI cost dashboard showing last month's usage, effective prices, and discounts."
+requires-python = ">=3.11"
+dependencies = [
+    "azure-identity==1.19.0",
+    "azure-mgmt-resource==23.1.1",
+    "requests==2.32.3",
+    "pandas==2.2.3",
+    "pyarrow==17.0.0",
+    "streamlit==1.40.2",
+    "plotly==5.24.1",
+    "typer==0.13.1",
+    "rich==13.9.4",
+    "python-dateutil==2.9.0.post0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[project.scripts]
+azure-cost = "src.collect.cli:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
